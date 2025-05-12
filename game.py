@@ -46,11 +46,15 @@ class Enemy:
     def draw(self):
         self.actor.draw()
 
-player = Actor("guy1")
+player = Actor("sprite1")
 player.pos = 40, HEIGHT-70
 
 player.vy = 0
 player.vx = 0
+player.animation_timer = 0
+player.current_sprite = "sprite1"
+player.facing_right = True
+
 JUMP_POWER = -15
 GRAVITY = 0.8
 MOVE_SPEED = 5
@@ -67,8 +71,7 @@ background = {
     0 : ["backg", 15, 40, HEIGHT-70],
     1 : ["backg2", 80, 40, HEIGHT-120],
     2 : ["backg3", 15, 40, HEIGHT-70],
-    3 : ["backg4", 15, 40, HEIGHT-70]
-}
+    3 : ["backg4", 15, 40, HEIGHT-70]}
 
 def create_platforms():
     global platforms, enemies
@@ -77,41 +80,51 @@ def create_platforms():
     
     base_platform = Rect((0, HEIGHT-40), (WIDTH, 40))
     platforms.append(base_platform)
-    
     if level == 0:
-        p1 = Rect((200, HEIGHT-120), (100, 80))
-        platforms.extend([p1])
-        enemies.append(Enemy(p1.x + 10, p1.y - 12, p1))
-        
+        for i in range(4): 
+            y = HEIGHT - 120 + i * 20
+            p = Rect((150, y), (100, 20))
+            platforms.append(p)
+        enemies.append(Enemy(150 + 10, HEIGHT - 120 - 12, platforms[1]))
+
     elif level == 1:
-        p1 = Rect((150, HEIGHT-40), (100, 20))
+        p1 = Rect((150, HEIGHT-60), (100, 20))
         p2 = Rect((350, HEIGHT-150), (100, 20))
-        p3 = Rect((550, HEIGHT-250), (100, 210))
-        platforms.extend([p1, p2, p3])
+        platforms.extend([p1, p2])  
+        for i in range(10): 
+            y = HEIGHT - 240 + i * 20
+            p = Rect((550, y), (100, 20))
+            platforms.append(p)
         enemies.append(Enemy(p1.x + 10, p1.y - 12, p1))
         enemies.append(Enemy(p2.x + 10, p2.y - 12, p2))
         
     elif level == 2:
         p1 = Rect((200, HEIGHT-150), (100, 20))
-        p2 = Rect((400, HEIGHT-280), (100, 200))
-        p3 = Rect((600, HEIGHT-220), (100, 180))
-        platforms.extend([p1, p2, p3])
+        platforms.append(p1)
+        for i in range(9): 
+            y = HEIGHT - 260 + i * 20
+            p = Rect((400, y), (100, 20))
+            platforms.append(p)
+        for i in range(9): 
+            y = HEIGHT - 220 + i * 20
+            p = Rect((600, y), (100, 20))
+            platforms.append(p)
         enemies.append(Enemy(p1.x + 10, p1.y - 12, p1))
-        enemies.append(Enemy(p2.x + 10, p2.y - 12, p2))
-        enemies.append(Enemy(p3.x + 10, p3.y - 12, p3))
+        enemies.append(Enemy(400 + 10, HEIGHT - 260 - 12, platforms[2])) 
+        enemies.append(Enemy(600 + 10, HEIGHT - 220 - 12, platforms[11])) 
         
     elif level == 3:
-        p1 = Rect((150, HEIGHT-200), (100, 20))
-        p2 = Rect((350, HEIGHT-300), (100, 20))
-        p3 = Rect((550, HEIGHT-250), (100, 20))
+        p1 = Rect((150, HEIGHT-170), (100, 20))
+        p2 = Rect((350, HEIGHT-190), (100, 20))
+        p3 = Rect((550, HEIGHT-160), (100, 20))
         platforms.extend([p1, p2, p3])
-        enemies.append(Enemy(p1.x + 10, p1.y - 12, p1))
-        enemies.append(Enemy(p2.x + 10, p2.y - 12, p2))
-        enemies.append(Enemy(p3.x + 10, p3.y - 12, p3))
+        enemies.append(Enemy(p1.x + 10, p1.y + 117, p1))
+        enemies.append(Enemy(p2.x + 10, p2.y + 137, p2))
+        enemies.append(Enemy(p3.x + 10, p3.y + 107, p3))
 
 def draw_menu():
     screen.fill((0, 0, 0))
-    screen.draw.text("PLATFORMER GAME", (WIDTH//2 - 150, HEIGHT//4), fontsize=50, color="white")
+    screen.draw.text("PLATFORMER GAME", (WIDTH//2 - 180, HEIGHT//4), fontsize=50, color="white")
     
     screen.draw.filled_rect(start_button, (0, 255, 0))
     screen.draw.text("Iniciar Jogo", (start_button.x + 50, start_button.y + 15), fontsize=30, color="black")
@@ -138,23 +151,26 @@ def draw():
 def if_dead():
     global music_playing
     screen.blit(background[level][0], (0,0))
-    screen.draw.text("You dead!", ((WIDTH//2-100), HEIGHT//2), fontsize=30, color="white")
-    screen.draw.text("Press SPACEBAR to go back to menu", ((WIDTH//2-200), HEIGHT//2 + 50), fontsize=20, color="white")
+    screen.draw.text("You dead!", ((WIDTH//2-80), HEIGHT//2), fontsize=50, color="black")
+    screen.draw.text("Press SPACEBAR to go back to menu", ((WIDTH//2-200), HEIGHT//2 + 50), fontsize=30, color="black")
     if music_playing:
         music.stop()
         music_playing = False
 
 def if_not_dead():
     screen.blit(background[level][0], (0,0))
-    for platform in platforms:
+    # Desenha a plataforma base com o sprite
+    screen.blit("baseplatsprite", (0, HEIGHT-40))
+    
+    for platform in platforms[1:]:  # Pula a primeira plataforma (base) que já foi desenhada
         if level == 0:
-            screen.draw.filled_rect(platform, (255, 0, 0))
+            screen.blit("plat0sprite", (platform.x, platform.y))
         elif level == 1:
-            screen.draw.filled_rect(platform, (0, 0, 255))
+            screen.blit("plat1sprite", (platform.x, platform.y))
         elif level == 2:
-            screen.draw.filled_rect(platform, (255, 165, 0))
+            screen.blit("plat2sprite", (platform.x, platform.y))
         elif level == 3:
-            screen.draw.filled_rect(platform, (128, 0, 128))
+            screen.blit("plat3sprite", (platform.x, platform.y))
     player.draw()
     for enemy in enemies:
         enemy.draw()
@@ -162,11 +178,12 @@ def if_not_dead():
 def if_won():
     global music_playing
     screen.blit(background[level][0], (0,0))
-    screen.draw.text("You Won!", ((WIDTH//2-100), HEIGHT//2), fontsize=30, color="white")
-    screen.draw.text("Press SPACEBAR to go back to menu", ((WIDTH//2-200), HEIGHT//2 + 50), fontsize=20, color="white")
+    screen.draw.text("You Won!", ((WIDTH//2-100), HEIGHT//2), fontsize=50, color="black")
+    screen.draw.text("Press SPACEBAR to go back to menu", ((WIDTH//2-200), HEIGHT//2 + 50), fontsize=30, color="black")
     player.draw()
     player.pos = (WIDTH//2)+100, HEIGHT//2
     player.image = "cheer"
+    player.scale = 10.0
     if music_playing:
         music.stop()
         music_playing = False
@@ -176,6 +193,29 @@ def update():
     
     if game_state == PLAYING:
         if not dead:
+            # Atualização da animação do player
+            if player.vx != 0:
+                player.animation_timer += 1
+                if player.animation_timer >= 10:
+                    player.animation_timer = 0
+                    if player.current_sprite == "sprite1":
+                        player.current_sprite = "sprite2"
+                    else:
+                        player.current_sprite = "sprite1"
+            else:
+                player.animation_timer = 0
+                player.current_sprite = "idle"
+
+            if player.vx > 0:
+                player.facing_right = True
+            elif player.vx < 0:
+                player.facing_right = False
+
+            if player.facing_right:
+                player.image = player.current_sprite
+            else:
+                player.image = player.current_sprite + "left"
+
             player.vy += GRAVITY
             player.y += player.vy
             player.x += player.vx
